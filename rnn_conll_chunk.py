@@ -13,6 +13,7 @@ vocab = set([])
 setTags = set([])
 tag = []
 tags = []
+
 for ln in open(file_name):
     if ln == "\n":
         sentence.append(word)
@@ -20,12 +21,13 @@ for ln in open(file_name):
         word = []
         tag = []
         continue
+        
     line = ln.strip().split()
     word.append(line[0])
     vocab.add(line[0])
     tag.append(line[2])
     setTags.add(line[2])
-# print(sentence)
+    
 vocab_set = list(vocab)
 set_tags = (list(setTags))
 
@@ -37,7 +39,7 @@ index2word = {index: word for word, index in word2index.items()}
 tag2index = {tag:index for index, tag in enumerate(set_tags)}
 index2tag = {index:tag for tag, index in tag2index.items()}
 tags2index = [[tag2index[t] for t in tag]for tag in tags]
-print(tags2index[1000])
+
 sentence2index = [[word2index[word] for word in sent]for sent in sentence]
 sequence_length = torch.LongTensor(list(map(len, sentence2index)))
 tags_length = torch.LongTensor(list(map(len, tags2index)))
@@ -56,9 +58,6 @@ tags_length, tag_perm_idx = tags_length.sort(0, descending=True)
 
 seq_zero_vector = seq_zero_vector[perm_idx]
 tag_zero_vector = tag_zero_vector[tag_perm_idx]
-
-print(seq_zero_vector[1000])
-print(tag_zero_vector[1000])
 
 
 batch_size = 8936
@@ -86,26 +85,20 @@ class Model(nn.Module):
         h_0 = torch.zeros(num_layer, batch_size, hidden_size)
         packed_input = pack_padded_sequence(out, sequence_length.cpu().numpy(),  batch_first=True)
         packed_output, hidden = self.rnn(packed_input, h_0)
-        # print(numpy.array(packed_output).shape,"output")
+
         print(hidden.shape)
         output, _ = pad_packed_sequence(packed_output, padding_value = 0,batch_first = True)
         out = self.fc(output)
-        # return hidden, packed_output
+
         return out
 #
 #
 model = Model(vocab_size, input_size, hidden_size, tagSize)
-# print(list(model.parameters()))
+
 cost = nn.CrossEntropyLoss(ignore_index = -100)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 out = model(seq_zero_vector)
-# print(out)
-# print(out.shape,"out")
-# print(tag_zero_vector.shape,"Y")
-# print(torch.argmax(out,dim=2).shape)
-# print(out.view(-1,22))
-# print(torch.argmax(out, dim=2).shape,"out")
-# print(y.shape,"y")
+
 #
 for epoch in range(101):
     optimizer.zero_grad()
